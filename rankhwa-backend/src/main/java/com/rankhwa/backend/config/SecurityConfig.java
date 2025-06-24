@@ -14,7 +14,8 @@ public class SecurityConfig {
         http
                 .csrf().disable()
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers("/health/sanity_check").permitAll() //temporarily allowing health checkup; remove this later
+                        .requestMatchers("/health/sanity-check").permitAll() //temporarily allowing health checkup; remove this later
+                        .requestMatchers("/db-health/ping").permitAll()
                         .anyRequest().authenticated()// protecting other endpoints
                 )
                 .httpBasic();
