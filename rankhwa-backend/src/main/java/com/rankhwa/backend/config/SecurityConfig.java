@@ -22,9 +22,11 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
                                         "/auth/**",
-                                        "/health/**"
+                                        "/health/**",
+                                        "/users/*"
                                         //,"/db-health/**" making endpoint protected
                                 ).permitAll()
+                        .requestMatchers("/users/me/**").authenticated()
                         .anyRequest().authenticated()// protecting other endpoints
                 )
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
