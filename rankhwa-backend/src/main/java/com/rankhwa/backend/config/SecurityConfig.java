@@ -23,7 +23,7 @@ public class SecurityConfig {
                         .requestMatchers(
                                         "/auth/**",
                                         "/health/**",
-                                        "/users/{id:[0-9]+}"
+                                        "/users/*"
                                         //,"/db-health/**" making endpoint protected
                                 ).permitAll()
                         .requestMatchers("/users/me/**").authenticated()
