@@ -23,8 +23,8 @@ public class SecurityConfig {
                         .requestMatchers(
                                         "/auth/**",
                                         "/health/**",
-                                        "/users/*"
-                                        //,"/db-health/**" making endpoint protected
+                                        "/users/*",
+                                        "/manhwa/**"
                                 ).permitAll()
                         .requestMatchers("/users/me/**").authenticated()
                         .anyRequest().authenticated()// protecting other endpoints
