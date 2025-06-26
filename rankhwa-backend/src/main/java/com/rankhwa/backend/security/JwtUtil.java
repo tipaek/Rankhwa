@@ -2,6 +2,7 @@ package com.rankhwa.backend.security;
 
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.security.Keys;
+import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Component;
 
 import java.security.Key;
@@ -30,4 +31,5 @@ public class JwtUtil {
                         .parseClaimsJws(token).getBody().getSubject()
         );
     }
+
 }

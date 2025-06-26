@@ -21,12 +21,14 @@ public class SecurityConfig {
                 .csrf().disable()
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
+                                "/users/me/**",
+                                "/manhwa/*/rating").authenticated()
+                        .requestMatchers(
                                         "/auth/**",
                                         "/health/**",
                                         "/users/*",
                                         "/manhwa/**"
                                 ).permitAll()
-                        .requestMatchers("/users/me/**").authenticated()
                         .anyRequest().authenticated()// protecting other endpoints
                 )
                 .sessionManagement(sm -> sm.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
