@@ -36,3 +36,6 @@ build/
 
 ### Environmental Variables ###
 **/.env
+
+## Python ##
+**/.venv

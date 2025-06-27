@@ -35,4 +35,18 @@ public class Manhwa {
 
     private Double avgRating = 0.0;
     private Integer voteCount = 0;
+
+    // --- for anilist seeding ---
+    @Column(name = "anilist_id", unique = true)
+    private Long anilistId;
+    @Column(name = "seed_popularity")
+    private Integer seedPopularity = 0;
+    @Column(name = "title_native")
+    private String titleNative;
+    @Column(name = "title_english")
+    private String titleEnglish;
+    @Column(columnDefinition = "jsonb")
+    private String titles;
+
+
 }
