@@ -31,8 +31,13 @@ query ($page:Int,$perPage:Int){
   }
 }
 """
-THRESHOLD = int(os.getenv("POPULATION_THRESHOLD", 30))
+THRESHOLD = int(os.getenv("POPULATION_THRESHOLD", 200))
 PAGE_SIZE  = 50
+
+BANNED_GENRES = {
+    "Hentai", "Smut", "Erotica", "Ecchi",
+    "Yaoi", "Yuri",             
+}
 
 def preferred_title(t):
     return (
@@ -87,29 +92,67 @@ def upsert(cur: psycopg.Cursor, m: dict):
         m["popularity"],
     ))
 
+def passes_filters(m: dict) -> bool:
+    if m.get("isAdult"):
+        return False
+
+    if any(g in BANNED_GENRES for g in m.get("genres", [])):
+        return False
+
+    if any(tag.get("isAdult") for tag in m.get("tags", [])):
+        return False
+
+    return True
+
+def fetch_page(page: int) -> dict:
+    """
+    Keeps POSTing until we get a successful response.
+    On HTTP 429: sleep 5 min and retry.
+    On other RequestExceptions: back off 60 sec then retry.
+    """
+    while True:
+        try:
+            resp = requests.post(
+                "https://graphql.anilist.co",
+                json={"query": GRAPHQL, "variables": {"page": page, "perPage": PAGE_SIZE}},
+                timeout=15,
+            )
+            # if AniList sends a Retry-After header, honor it; else default to 300s
+            if resp.status_code == 429:
+                wait = int(resp.headers.get("Retry-After", 300))
+                print(f"[Page {page}] Rate limited → sleeping {wait} sec…")
+                time.sleep(wait)
+                continue
+
+            resp.raise_for_status()
+            return resp.json()
+
+        except requests.RequestException as e:
+            # covers timeouts, DNS errors, 5xx, etc.
+            print(f"[Page {page}] Request error: {e!r}. Retrying in 60 sec…")
+            time.sleep(60)
+
+
 def main():
     with psycopg.connect(db_url) as conn, conn.cursor() as cur:
         page = 1
         while True:
-            resp = requests.post(
-                "https://graphql.anilist.co",
-                json={"query": GRAPHQL,
-                      "variables": {"page": page, "perPage": PAGE_SIZE}},
-                timeout=15,
-            )
-            resp.raise_for_status()
-            media = resp.json()["data"]["Page"]["media"]
+            payload = fetch_page(page)
+            media = payload["data"]["Page"]["media"]
             if not media:
+                print("No more media—finished!")
                 break
 
             for m in media:
+                if not passes_filters(m):
+                    continue
                 if m["popularity"] >= THRESHOLD:
                     upsert(cur, m)
 
             conn.commit()
-            print(f"Page {page} done ({len(media)} titles)")
+            print(f"Page {page} done ({len(media)} titles).")
             page += 1
-            time.sleep(0.7)     # AniList limit: 90 req/min
+            time.sleep(0.7)  # stick under 90 req/min
 
 if __name__ == "__main__":
     main()
