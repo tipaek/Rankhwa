@@ -26,7 +26,8 @@ public class Manhwa {
 
     private String author;
 
-    @Column(length = 4000)
+    @Lob
+    @Column(columnDefinition = "text")
     private String description;
 
     private String coverUrl;
