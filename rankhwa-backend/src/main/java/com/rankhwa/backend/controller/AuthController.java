@@ -5,6 +5,7 @@ import com.rankhwa.backend.dto.RegisterRequest;
 import com.rankhwa.backend.model.User;
 import com.rankhwa.backend.repository.UserRepository;
 import com.rankhwa.backend.security.JwtUtil;
+import com.rankhwa.backend.service.ListService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -22,6 +23,7 @@ public class AuthController {
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
     private final JwtUtil jwtUtil;
+    private final ListService listService;
 
     @PostMapping("/register")
     public ResponseEntity<?> register(@RequestBody RegisterRequest request) {
@@ -36,6 +38,7 @@ public class AuthController {
         user.setAuthProvider(User.AuthProvider.LOCAL);
 
         userRepository.save(user);
+        listService.createDefaultListsFor(user);
         return ResponseEntity.ok("Registration successful!");
     }
 

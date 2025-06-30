@@ -21,8 +21,8 @@ public class SecurityConfig {
                 .csrf().disable()
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
-                                "/users/me/**",
-                                "/manhwa/*/rating").authenticated()
+                                "/manhwa/*/rating",
+                                "/lists/**").authenticated()
                         .requestMatchers(
                                         "/auth/**",
                                         "/health/**",
