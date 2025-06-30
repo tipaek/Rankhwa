@@ -21,6 +21,7 @@ public class SecurityConfig {
                 .csrf().disable()
                 .authorizeHttpRequests(auth -> auth
                         .requestMatchers(
+                                "/users/me/**",
                                 "/manhwa/*/rating",
                                 "/lists/**").authenticated()
                         .requestMatchers(
