@@ -5,6 +5,7 @@ import io.jsonwebtoken.security.Keys;
 import jakarta.annotation.PostConstruct;
 import org.springframework.stereotype.Component;
 
+import java.nio.charset.StandardCharsets;
 import java.security.Key;
 import java.time.Instant;
 import java.util.Date;
@@ -15,7 +16,18 @@ public class JwtUtil {
 
     @PostConstruct
     void init() {
-        key = Keys.hmacShaKeyFor(System.getenv("JWT_SECRET").getBytes());
+        String secret = System.getenv("JWT_SECRET");
+
+        if (secret == null || secret.isBlank()) {
+            secret = System.getProperty("JWT_SECRET");
+        }
+
+        if (secret == null || secret.length() < 32) {
+            throw new IllegalStateException(
+                    "JWT_SECRET missing or too short (minimum 32 characters)");
+        }
+
+        key = Keys.hmacShaKeyFor(secret.getBytes(StandardCharsets.UTF_8));
     }
 
     public String generateToken(Long userId, String email) {
