@@ -11,8 +11,12 @@ import java.util.Date;
 
 @Component
 public class JwtUtil {
-    private final Key key = Keys.hmacShaKeyFor(
-            System.getProperty("JWT_SECRET").getBytes());
+    private Key key;
+
+    @PostConstruct
+    void init() {
+        key = Keys.hmacShaKeyFor(System.getenv("JWT_SECRET").getBytes());
+    }
 
     public String generateToken(Long userId, String email) {
         Instant now = Instant.now();
