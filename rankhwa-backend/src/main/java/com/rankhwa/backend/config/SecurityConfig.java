@@ -29,6 +29,7 @@ public class SecurityConfig {
                                         "/health/**",
                                         "/users/*",
                                         "/manhwa",
+                                        "/manhwa/",
                                         "/manhwa/**"
                                 ).permitAll()
                         .anyRequest().authenticated()// protecting other endpoints

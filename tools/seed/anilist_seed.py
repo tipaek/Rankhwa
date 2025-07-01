@@ -31,7 +31,7 @@ query ($page:Int,$perPage:Int){
   }
 }
 """
-THRESHOLD = int(os.getenv("POPULATION_THRESHOLD", 200))
+THRESHOLD = int(os.getenv("POPULATION_THRESHOLD", 100))
 PAGE_SIZE  = 50
 
 BANNED_GENRES = {
@@ -63,34 +63,42 @@ def safe_date(y, m, d):
 def upsert(cur: psycopg.Cursor, m: dict):
     t = m["title"]
     author = first_author(m)
-    release_date = safe_date(
-        m['startDate']['year'],
-        m['startDate']['month'],
-        m['startDate']['day'],
-    )
-    cur.execute("""
-        INSERT INTO manhwa
-            (anilist_id, title, titles, title_native, title_english,
-            author, description, avg_rating, vote_count,
-            cover_url, release_date, seed_popularity)
-        VALUES (%s,%s,%s::jsonb,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+    desc = (m["description"] or "").replace("\r", " ").replace("\t", " ")
+
+    cur.execute(
+        """
+        INSERT INTO manhwa (
+            anilist_id, title, titles, title_native, title_english,
+            author, description,
+            avg_rating, vote_count,
+            cover_url, release_date, seed_popularity
+        )
+        VALUES (%(id)s, %(title)s, %(titles)s::jsonb, %(native)s, %(english)s,
+                %(author)s, %(desc)s,
+                %(avg)s, %(pop)s,
+                %(cover)s, %(reldate)s, %(pop)s)
         ON CONFLICT (anilist_id) DO UPDATE
-            SET title_native  = COALESCE(manhwa.title_native,  EXCLUDED.title_native),
-                title_english = COALESCE(manhwa.title_english, EXCLUDED.title_english)
-    """, (
-        m["id"],
-        preferred_title(t),
-        json.dumps(t),
-        t["native"],
-        t["english"],
-        author,
-        m["description"],         
-        (m["averageScore"] or 0) / 10,
-        m["popularity"],
-        m["coverImage"]["extraLarge"],
-        release_date,              
-        m["popularity"],
-    ))
+          SET title_native  = COALESCE(manhwa.title_native,  EXCLUDED.title_native),
+              title_english = COALESCE(manhwa.title_english, EXCLUDED.title_english)
+        """,
+        dict(
+            id=m["id"],
+            title=preferred_title(t),
+            titles=json.dumps(t),
+            native=t.get("native"),
+            english=t.get("english"),
+            author=author,
+            desc=desc,
+            avg=(m["averageScore"] or 0) / 10,
+            pop=m["popularity"],
+            cover=m["coverImage"]["extraLarge"],
+            reldate=safe_date(
+                m["startDate"]["year"],
+                m["startDate"]["month"],
+                m["startDate"]["day"],
+            ),
+        ),
+    )
 
 def passes_filters(m: dict) -> bool:
     if m.get("isAdult"):

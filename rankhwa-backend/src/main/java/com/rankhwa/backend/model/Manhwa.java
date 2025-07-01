@@ -26,7 +26,6 @@ public class Manhwa {
 
     private String author;
 
-    @Lob
     @Column(columnDefinition = "text")
     private String description;
 
@@ -48,6 +47,5 @@ public class Manhwa {
     private String titleEnglish;
     @Column(columnDefinition = "jsonb")
     private String titles;
-
 
 }
