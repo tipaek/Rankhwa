@@ -1,0 +1,14 @@
+{
+  "name": "rankhwa",
+  "version": "1.0.0",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+     "build": "npm -w frontend run build && echo 'backend built by Maven'",
+    "lint": "npm -w frontend run lint"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "description": ""
+}

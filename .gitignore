@@ -39,3 +39,10 @@ build/
 
 ## Python ##
 **/.venv
+
+
+### FRONTEND ###
+
+/node_modules
+/frontend/dist
+/.idea
