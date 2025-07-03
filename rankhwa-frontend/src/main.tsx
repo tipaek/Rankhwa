@@ -7,13 +7,13 @@ import { AuthProvider } from './auth/AuthProvider';
 import Router from './router';       
 import theme from './theme';
 
-const qc = new QueryClient();
+const queryClient = new QueryClient();
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ThemeProvider theme={theme}>
       <CssBaseline />
-      <QueryClientProvider client={qc}>
+      <QueryClientProvider client={queryClient}>
         <BrowserRouter>
           <AuthProvider>
             <Router />
