@@ -2,10 +2,11 @@
   "name": "rankhwa",
   "version": "1.0.0",
   "private": true,
+  "workspaces": ["backend", "frontend"],
   "main": "index.js",
   "scripts": {
      "build": "npm -w frontend run build && echo 'backend built by Maven'",
-    "lint": "npm -w frontend run lint"
+     "lint": "npm -w frontend run lint"
   },
   "keywords": [],
   "author": "",
