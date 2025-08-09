@@ -1,6 +1,7 @@
 package com.rankhwa.backend.dto;
 
 import java.time.LocalDate;
+import java.util.List;
 
 public record ManhwaDetail (
         Long id,
@@ -10,5 +11,9 @@ public record ManhwaDetail (
         LocalDate releaseDate,
         Double avgRating,
         Integer voteCount,
-        String coverUrl
+        String coverUrl,
+        List<String> genres,
+        String titleEnglish,
+        String titleRomaji,
+        String titleNative
 ){}
