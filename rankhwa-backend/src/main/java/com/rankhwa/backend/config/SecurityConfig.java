@@ -48,7 +48,7 @@ public class SecurityConfig {
     @Bean
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration cfg = new CorsConfiguration();
-        cfg.setAllowedOrigins(List.of("http://localhost:5173"));
+        cfg.setAllowedOrigins(List.of("http://localhost:5173", "https://rankhwa.vercel.app"));
         cfg.setAllowedMethods(List.of("GET","POST","PATCH","DELETE","OPTIONS"));
         cfg.setAllowedHeaders(List.of("*"));
         cfg.setAllowCredentials(true);
