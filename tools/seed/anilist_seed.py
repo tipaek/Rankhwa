@@ -13,30 +13,11 @@ import calendar, datetime
 load_dotenv(dotenv_path="rankhwa-backend/.env")
 db_url = os.environ["SPRING_DATASOURCE_SEED_URL"]
 
-GRAPHQL = """
-query ($page:Int,$perPage:Int){
-  Page(page:$page, perPage:$perPage){
-    media(type:MANGA, countryOfOrigin:"KR", sort:POPULARITY_DESC){
-      id
-      title { romaji english native userPreferred }
-      description(asHtml:false)
-      averageScore
-      popularity
-      startDate { year month day }
-      coverImage { extraLarge }
-      staff(sort:RELEVANCE, perPage:1){
-        nodes { name { full } }
-      }
-    }
-  }
-}
-"""
 THRESHOLD = int(os.getenv("POPULATION_THRESHOLD", 100))
 PAGE_SIZE  = 50
 
 BANNED_GENRES = {
-    "Hentai", "Smut", "Erotica", "Ecchi",
-    "Yaoi", "Yuri",             
+    "Hentai", "Smut", "Erotica", "Ecchi"
 }
 
 def preferred_title(t):
@@ -60,10 +41,31 @@ def safe_date(y, m, d):
     d = min(d, calendar.monthrange(y, m)[1])  # clamp
     return datetime.date(y, m, d)
 
-def upsert(cur: psycopg.Cursor, m: dict):
+GRAPHQL = """
+query ($page:Int,$perPage:Int){
+  Page(page:$page, perPage:$perPage){
+    media(type:MANGA, countryOfOrigin:"KR", sort:POPULARITY_DESC){
+      id
+      title { romaji english native userPreferred }
+      description(asHtml:false)
+      averageScore
+      popularity
+      startDate { year month day }
+      coverImage { extraLarge }
+      genres
+      staff(sort:RELEVANCE, perPage:1){
+        nodes { name { full } }
+      }
+    }
+  }
+}
+"""
+
+def upsert(cur, m: dict):
     t = m["title"]
     author = first_author(m)
-    desc = (m["description"] or "").replace("\r", " ").replace("\t", " ")
+    desc = (m.get("description") or "").replace("\r", " ").replace("\t", " ")
+    genres = m.get("genres") or []
 
     cur.execute(
         """
@@ -71,15 +73,18 @@ def upsert(cur: psycopg.Cursor, m: dict):
             anilist_id, title, titles, title_native, title_english,
             author, description,
             avg_rating, vote_count,
-            cover_url, release_date, seed_popularity
+            cover_url, release_date, seed_popularity,
+            genres
         )
         VALUES (%(id)s, %(title)s, %(titles)s::jsonb, %(native)s, %(english)s,
                 %(author)s, %(desc)s,
                 %(avg)s, %(pop)s,
-                %(cover)s, %(reldate)s, %(pop)s)
+                %(cover)s, %(reldate)s, %(pop)s,
+                %(genres)s::jsonb)
         ON CONFLICT (anilist_id) DO UPDATE
           SET title_native  = COALESCE(manhwa.title_native,  EXCLUDED.title_native),
-              title_english = COALESCE(manhwa.title_english, EXCLUDED.title_english)
+              title_english = COALESCE(manhwa.title_english, EXCLUDED.title_english),
+              genres        = COALESCE(manhwa.genres, EXCLUDED.genres)
         """,
         dict(
             id=m["id"],
@@ -89,27 +94,26 @@ def upsert(cur: psycopg.Cursor, m: dict):
             english=t.get("english"),
             author=author,
             desc=desc,
-            avg=(m["averageScore"] or 0) / 10,
-            pop=m["popularity"],
+            avg=(m.get("averageScore") or 0)/10,
+            pop=m.get("popularity") or 0,
             cover=m["coverImage"]["extraLarge"],
             reldate=safe_date(
                 m["startDate"]["year"],
                 m["startDate"]["month"],
                 m["startDate"]["day"],
             ),
+            genres=json.dumps(genres),
         ),
     )
 
 def passes_filters(m: dict) -> bool:
+    # keep your existing adult/genre ban logic; now data is present
     if m.get("isAdult"):
         return False
-
     if any(g in BANNED_GENRES for g in m.get("genres", [])):
         return False
-
     if any(tag.get("isAdult") for tag in m.get("tags", [])):
         return False
-
     return True
 
 def fetch_page(page: int) -> dict:
