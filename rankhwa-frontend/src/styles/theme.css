@@ -1,0 +1,25 @@
+:root {
+  /* Light mode */
+  --color-bg: #FADCD5;             /* soft sakura pink */
+  --color-fg: #1B0C1A;             /* deep wine text */
+  --color-primary: #6D3C52;        /* muted crimson-purple */
+  --color-secondary: #765D67;      /* smoky lavender rose */
+  --color-accent: #4B2138;         /* rich plum accent */
+  --color-muted: #A78A94;          /* desaturated mauve for borders/dividers */
+  --color-card: #ffffff;           /* white for cards */
+  --color-border: #A78A94;         /* match muted */
+  --color-muted-foreground: #6D3C52; /* softer crimson text */
+}
+
+/* Dark mode */
+.dark {
+  --color-bg: #1B0C1A;             /* deep wine */
+  --color-fg: #FADCD5;             /* sakura pink text */
+  --color-primary: #6D3C52;        /* muted crimson-purple */
+  --color-secondary: #2D222F;      /* dark plum */
+  --color-accent: #4B2138;         /* rich plum */
+  --color-muted: #3E313D;          /* muted dark violet */
+  --color-card: #2D222F;           /* card background in dark mode */
+  --color-border: #4B2138;         /* deep plum border */
+  --color-muted-foreground: #A78A94; /* muted mauve text */
+}

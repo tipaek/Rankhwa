@@ -1,5 +1,5 @@
 """
-Seed Rankhwa DB from AniList.
+Seed Rankhwa DB from AniList with genres support.
 Usage:
   DB_URL=postgres://user:pass@host/db python tools/seed/anilist_seed.py
 """
@@ -12,34 +12,6 @@ import calendar, datetime
 
 load_dotenv(dotenv_path="rankhwa-backend/.env")
 db_url = os.environ["SPRING_DATASOURCE_SEED_URL"]
-
-THRESHOLD = int(os.getenv("POPULATION_THRESHOLD", 100))
-PAGE_SIZE  = 50
-
-BANNED_GENRES = {
-    "Hentai", "Smut", "Erotica", "Ecchi"
-}
-
-def preferred_title(t):
-    return (
-        t.get("english")        
-        or t.get("native")      
-        or t.get("romaji")     
-        or t.get("userPreferred")
-        or "Untitled"
-    )
-
-def first_author(m: dict) -> str | None:
-    nodes = m.get("staff", {}).get("nodes")
-    return nodes[0]["name"]["full"] if nodes else None
-
-def safe_date(y, m, d):
-    if not y:        # missing year → store NULL
-        return None
-    m = m or 1
-    d = d or 1
-    d = min(d, calendar.monthrange(y, m)[1])  # clamp
-    return datetime.date(y, m, d)
 
 GRAPHQL = """
 query ($page:Int,$perPage:Int){
@@ -61,11 +33,46 @@ query ($page:Int,$perPage:Int){
 }
 """
 
-def upsert(cur, m: dict):
+THRESHOLD = int(os.getenv("POPULATION_THRESHOLD", 100))
+PAGE_SIZE  = 50
+
+BANNED_GENRES = {
+    "Hentai", "Smut", "Erotica", "Ecchi",
+    "Yaoi", "Yuri",             
+}
+
+def preferred_title(t):
+    return (
+        t.get("english")
+        or t.get("native")
+        or t.get("romaji")
+        or t.get("userPreferred")
+        or "Untitled"
+    )
+
+def first_author(m: dict) -> str | None:
+    nodes = m.get("staff", {}).get("nodes")
+    return nodes[0]["name"]["full"] if nodes else None
+
+def safe_date(y, m, d):
+    if not y:
+        return None
+    m = m or 1
+    d = d or 1
+    d = min(d, calendar.monthrange(y, m)[1])
+    return datetime.date(y, m, d)
+
+def upsert(cur: psycopg.Cursor, m: dict, page: int):
     t = m["title"]
     author = first_author(m)
     desc = (m.get("description") or "").replace("\r", " ").replace("\t", " ")
     genres = m.get("genres") or []
+    if not isinstance(genres, list):
+        genres = []
+
+    # Debug log for page 1
+    if page == 1:
+        print(f"Sample genres for {m['id']}: {genres}")
 
     cur.execute(
         """
@@ -82,9 +89,9 @@ def upsert(cur, m: dict):
                 %(cover)s, %(reldate)s, %(pop)s,
                 %(genres)s::jsonb)
         ON CONFLICT (anilist_id) DO UPDATE
-          SET title_native  = COALESCE(manhwa.title_native,  EXCLUDED.title_native),
-              title_english = COALESCE(manhwa.title_english, EXCLUDED.title_english),
-              genres        = COALESCE(manhwa.genres, EXCLUDED.genres)
+          SET title_native  = COALESCE(EXCLUDED.title_native, manhwa.title_native),
+              title_english = COALESCE(EXCLUDED.title_english, manhwa.title_english),
+              genres        = EXCLUDED.genres
         """,
         dict(
             id=m["id"],
@@ -94,7 +101,7 @@ def upsert(cur, m: dict):
             english=t.get("english"),
             author=author,
             desc=desc,
-            avg=(m.get("averageScore") or 0)/10,
+            avg=(m.get("averageScore") or 0) / 10,
             pop=m.get("popularity") or 0,
             cover=m["coverImage"]["extraLarge"],
             reldate=safe_date(
@@ -102,12 +109,11 @@ def upsert(cur, m: dict):
                 m["startDate"]["month"],
                 m["startDate"]["day"],
             ),
-            genres=json.dumps(genres),
+            genres=json.dumps(genres or []),
         ),
     )
 
 def passes_filters(m: dict) -> bool:
-    # keep your existing adult/genre ban logic; now data is present
     if m.get("isAdult"):
         return False
     if any(g in BANNED_GENRES for g in m.get("genres", [])):
@@ -117,11 +123,6 @@ def passes_filters(m: dict) -> bool:
     return True
 
 def fetch_page(page: int) -> dict:
-    """
-    Keeps POSTing until we get a successful response.
-    On HTTP 429: sleep 5 min and retry.
-    On other RequestExceptions: back off 60 sec then retry.
-    """
     while True:
         try:
             resp = requests.post(
@@ -129,21 +130,17 @@ def fetch_page(page: int) -> dict:
                 json={"query": GRAPHQL, "variables": {"page": page, "perPage": PAGE_SIZE}},
                 timeout=15,
             )
-            # if AniList sends a Retry-After header, honor it; else default to 300s
             if resp.status_code == 429:
                 wait = int(resp.headers.get("Retry-After", 300))
                 print(f"[Page {page}] Rate limited → sleeping {wait} sec…")
                 time.sleep(wait)
                 continue
-
             resp.raise_for_status()
             return resp.json()
 
         except requests.RequestException as e:
-            # covers timeouts, DNS errors, 5xx, etc.
             print(f"[Page {page}] Request error: {e!r}. Retrying in 60 sec…")
             time.sleep(60)
-
 
 def main():
     with psycopg.connect(db_url) as conn, conn.cursor() as cur:
@@ -159,12 +156,12 @@ def main():
                 if not passes_filters(m):
                     continue
                 if m["popularity"] >= THRESHOLD:
-                    upsert(cur, m)
+                    upsert(cur, m, page)
 
             conn.commit()
             print(f"Page {page} done ({len(media)} titles).")
             page += 1
-            time.sleep(0.7)  # stick under 90 req/min
+            time.sleep(0.7)
 
 if __name__ == "__main__":
     main()

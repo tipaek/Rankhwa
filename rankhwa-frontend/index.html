@@ -1,12 +1,26 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Vite + React + TS</title>
+    <meta name="theme-color" content="#ffffff" />
+    <link rel="icon" type="image/svg+xml" href="/file.svg" />
+    <title>Rankhwa</title>
+    <script>
+      // Immediately apply stored theme class to prevent flash of incorrect theme.
+      (function () {
+        const storedTheme = localStorage.getItem('theme');
+        if (storedTheme === 'dark') {
+          document.documentElement.classList.add('dark');
+        } else if (storedTheme === 'light') {
+          document.documentElement.classList.remove('dark');
+        } else if (window.matchMedia('(prefers-color-scheme: dark)').matches) {
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
   </head>
-  <body>
+  <body class="bg-background text-foreground font-sans">
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
