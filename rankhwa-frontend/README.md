@@ -1,69 +1,75 @@
-# React + TypeScript + Vite
+# Rankhwa Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+This repository contains a frontend for **Rankhwa**, a site to discover, rate and curate manhwa and webtoons.  It is built with React, TypeScript, Vite, TailwindCSS and TanStack Query.
 
-Currently, two official plugins are available:
+## Getting started
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+1. **Install dependencies**
 
-## Expanding the ESLint configuration
+   ```bash
+   npm install
+   ```
 
-If you are developing a production application, we recommend updating the configuration to enable type-aware lint rules:
+   You can also use `pnpm install` if you prefer.  The project was scaffolded with Vite and uses modern ES modules, so Node ≥ 16 is required.
 
-```js
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
+2. **Configure the API base**
 
-      // Remove tseslint.configs.recommended and replace with this
-      ...tseslint.configs.recommendedTypeChecked,
-      // Alternatively, use this for stricter rules
-      ...tseslint.configs.strictTypeChecked,
-      // Optionally, add this for stylistic rules
-      ...tseslint.configs.stylisticTypeChecked,
+   Copy the provided `.env.example` to `.env` and adjust `VITE_API_BASE` to point at your deployed backend.  The default value points to the public sample deployment.
 
-      // Other configs...
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
+   ```bash
+   cp .env.example .env
+   # then edit .env if necessary
+   ```
+
+3. **Run the development server**
+
+   ```bash
+   npm run dev
+   ```
+
+   This starts Vite’s dev server on http://localhost:5173/ by default.  Changes in the `src/` directory will automatically trigger hot module reloads.
+
+4. **Build for production**
+
+   To produce an optimized build in `dist/` run:
+
+   ```bash
+   npm run build
+   ```
+
+   You can preview the build locally via `npm run preview`.
+
+## Project structure
+
+```
+rankhwa-frontend/
+├── index.html          # Entry point with root container and theme bootstrap
+├── public/             # Static assets served as-is
+│   ├── favicon.svg
+│   └── logo.svg
+├── src/
+│   ├── main.tsx        # Hooks up React with React Query and React Router
+│   ├── app.tsx         # Defines the routing structure and layout shell
+│   ├── routes/         # Page-level components for each route (Home, Search, Manhwa, Auth, Profile, Submit, NotFound)
+│   ├── components/     # Small UI primitives (Button, Input, Card, Badge, Dialog, Dropdown, Tabs, Toast)
+│   ├── features/       # Domain specific modules grouped by feature
+│   │   ├── auth/       # Authentication logic (AuthForm, store, hooks, protected route)
+│   │   ├── search/     # Search bar, filters, types and helper hooks
+│   │   ├── manhwa/     # Manhwa card/grid, rating stars, add‑to‑list
+│   │   └── lists/      # List tabs, card lists and actions
+│   ├── lib/            # Generic helpers (API client, query client, fetch wrapper, className helper)
+│   └── styles/         # Global and theme styles (Tailwind CSS variables)
+├── tailwind.config.ts  # Tailwind config using CSS variables for colours
+├── tsconfig.json       # TypeScript compiler options
+├── vite.config.ts      # Vite configuration with React plugin
+└── README.md           # This file
 ```
 
-You can also install [eslint-plugin-react-x](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-x) and [eslint-plugin-react-dom](https://github.com/Rel1cx/eslint-react/tree/main/packages/plugins/eslint-plugin-react-dom) for React-specific lint rules:
+## Notes
 
-```js
-// eslint.config.js
-import reactX from 'eslint-plugin-react-x'
-import reactDom from 'eslint-plugin-react-dom'
+* **Authentication:** JWTs are stored in both memory and `localStorage` to allow session persistence.  On 401/403 responses the token is cleared and the user is redirected to the login page with a toast message.  After login the user is returned to their previous page.
+* **Dark/light theme:** The theme toggle writes to `localStorage`.  CSS variables in `styles/theme.css` drive the colours for both modes; Tailwind uses those variables.
+* **API wiring:** All network requests originate from `lib/api.ts` which prepends `import.meta.env.VITE_API_BASE` to every path and handles auth headers.  React Query provides caching, deduplication and optimistic updates for rating and list operations.
+* **URL‑driven filters:** The search page stores all filter state in the URL’s querystring.  Navigating back/forward preserves results and the `useSearchParams` hook centralises the parsing and updating logic.
 
-export default tseslint.config([
-  globalIgnores(['dist']),
-  {
-    files: ['**/*.{ts,tsx}'],
-    extends: [
-      // Other configs...
-      // Enable lint rules for React
-      reactX.configs['recommended-typescript'],
-      // Enable lint rules for React DOM
-      reactDom.configs.recommended,
-    ],
-    languageOptions: {
-      parserOptions: {
-        project: ['./tsconfig.node.json', './tsconfig.app.json'],
-        tsconfigRootDir: import.meta.dirname,
-      },
-      // other options...
-    },
-  },
-])
-```
+This codebase provides a solid foundation for building a polished manhwa discovery experience.  It is designed to be extended – for example, you could add analytics, offline support or a submission workflow by following the established patterns.
