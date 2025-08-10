@@ -5,7 +5,7 @@ Usage:
 """
 
 import os, requests, time
-import psycopg
+import psycopg as psycopg
 from dotenv import load_dotenv
 import json
 import calendar, datetime
@@ -24,7 +24,11 @@ query ($page:Int,$perPage:Int){
       popularity
       startDate { year month day }
       coverImage { extraLarge }
+      bannerImage
+      chapters
       genres
+      isAdult                      # <-- add
+      tags { name isAdult }        # <-- add
       staff(sort:RELEVANCE, perPage:1){
         nodes { name { full } }
       }
@@ -33,19 +37,20 @@ query ($page:Int,$perPage:Int){
 }
 """
 
+
 THRESHOLD = int(os.getenv("POPULATION_THRESHOLD", 100))
 PAGE_SIZE  = 50
 
 BANNED_GENRES = {
     "Hentai", "Smut", "Erotica", "Ecchi",
-    "Yaoi", "Yuri",             
+    "Yaoi", "Yuri", "Steamy", "BL", "GL", "Adult"
 }
 
 def preferred_title(t):
     return (
         t.get("english")
-        or t.get("native")
         or t.get("romaji")
+        or t.get("native")
         or t.get("userPreferred")
         or "Untitled"
     )
@@ -70,27 +75,27 @@ def upsert(cur: psycopg.Cursor, m: dict, page: int):
     if not isinstance(genres, list):
         genres = []
 
-    # Debug log for page 1
-    if page == 1:
-        print(f"Sample genres for {m['id']}: {genres}")
-
     cur.execute(
         """
         INSERT INTO manhwa (
             anilist_id, title, titles, title_native, title_english,
             author, description,
             avg_rating, vote_count,
-            cover_url, release_date, seed_popularity,
+            cover_url, banner_url, chapters,           -- NEW
+            release_date, seed_popularity,
             genres
         )
         VALUES (%(id)s, %(title)s, %(titles)s::jsonb, %(native)s, %(english)s,
                 %(author)s, %(desc)s,
                 %(avg)s, %(pop)s,
-                %(cover)s, %(reldate)s, %(pop)s,
+                %(cover)s, %(banner)s, %(chapters)s,   -- NEW
+                %(reldate)s, %(pop)s,
                 %(genres)s::jsonb)
         ON CONFLICT (anilist_id) DO UPDATE
-          SET title_native  = COALESCE(EXCLUDED.title_native, manhwa.title_native),
+          SET title_native  = COALESCE(EXCLUDED.title_native,  manhwa.title_native),
               title_english = COALESCE(EXCLUDED.title_english, manhwa.title_english),
+              banner_url    = COALESCE(EXCLUDED.banner_url,    manhwa.banner_url), -- NEW
+              chapters      = COALESCE(EXCLUDED.chapters,      manhwa.chapters),   -- NEW
               genres        = EXCLUDED.genres
         """,
         dict(
@@ -104,6 +109,8 @@ def upsert(cur: psycopg.Cursor, m: dict, page: int):
             avg=(m.get("averageScore") or 0) / 10,
             pop=m.get("popularity") or 0,
             cover=m["coverImage"]["extraLarge"],
+            banner=m.get("bannerImage"),                        # NEW
+            chapters=m.get("chapters"),                         # NEW
             reldate=safe_date(
                 m["startDate"]["year"],
                 m["startDate"]["month"],
@@ -112,6 +119,7 @@ def upsert(cur: psycopg.Cursor, m: dict, page: int):
             genres=json.dumps(genres or []),
         ),
     )
+
 
 def passes_filters(m: dict) -> bool:
     if m.get("isAdult"):

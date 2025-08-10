@@ -12,6 +12,8 @@ public record ManhwaDetail (
         Double avgRating,
         Integer voteCount,
         String coverUrl,
+        String bannerUrl,
+        Integer chapters,
         List<String> genres,
         String titleEnglish,
         String titleRomaji,

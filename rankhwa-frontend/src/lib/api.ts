@@ -7,6 +7,9 @@ export interface ManhwaSummary {
   avgRating?: number | null;
   voteCount?: number;
   coverUrl?: string | null;
+  bannerUrl?: string | null;
+  chapters?: number | null;
+
   genres?: string[];
   titleEnglish?: string | null;
   titleRomaji?: string | null;

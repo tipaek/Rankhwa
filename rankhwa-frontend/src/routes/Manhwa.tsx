@@ -36,6 +36,15 @@ const ManhwaPage: React.FC = () => {
   const displayTitle = manhwa.titleEnglish || manhwa.titleRomaji || manhwa.titleNative || manhwa.title;
   return (
     <div className="max-w-5xl mx-auto p-4">
+      {manhwa.bannerUrl && (
+        <div className="mb-6">
+          <img
+            src={manhwa.bannerUrl}
+            alt={`${displayTitle} banner`}
+            className="w-full max-h-64 md:max-h-80 object-cover"
+          />
+        </div>
+      )}
       <div className="flex flex-col md:flex-row gap-6">
         <img
           src={manhwa.coverUrl || ''}
@@ -53,6 +62,7 @@ const ManhwaPage: React.FC = () => {
               <p className="text-sm text-muted">{manhwa.titleNative}</p>
             )}
           </div>
+          
           {/* Rating summary */}
           {typeof manhwa.avgRating === 'number' && (
             <div className="flex items-center space-x-2">
@@ -94,6 +104,12 @@ const ManhwaPage: React.FC = () => {
             {manhwa.releaseDate && (
               <div>
                 <span className="font-medium">Release:</span> {new Date(manhwa.releaseDate).getFullYear()}
+              </div>
+            )}
+            {/* Chapter Number */}
+            {typeof manhwa.chapters === 'number' && manhwa.chapters > 0 && (
+              <div>
+                <span className="font-medium">Chapters:</span> {manhwa.chapters}
               </div>
             )}
             {manhwa.genres && manhwa.genres.length > 0 && (

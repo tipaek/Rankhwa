@@ -11,12 +11,12 @@ const HomePage: React.FC = () => {
   const [year, setYear] = useState(currentYear);
 
   const trending = useQuery(['trending'], () =>
-    getManhwaList({ sort: 'rating', min_votes: 10, size: 10 })
+    getManhwaList({ sort: 'rating', min_votes: 1000, size: 10 })
   );
 
   const popularYear = useQuery(
     ['popular-year', year],
-    () => getManhwaList({ year, sort: 'rating', min_votes: 20, size: 10 }),
+    () => getManhwaList({ year, sort: 'rating', min_votes: 200, size: 10 }),
     { keepPreviousData: true }
   );
 
