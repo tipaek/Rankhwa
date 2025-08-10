@@ -34,6 +34,7 @@ export const ManhwaCard: React.FC<ManhwaCardProps> = ({ manhwa }) => {
           className="w-full h-80 object-cover transition-transform group-hover:scale-105"
         />
       </Link>
+      
       {/* Add to List button */}
       {user && (
         <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -49,6 +50,12 @@ export const ManhwaCard: React.FC<ManhwaCardProps> = ({ manhwa }) => {
                 {genre}
               </Badge>
             ))}
+          </div>
+        )}
+        {/* Chapters */}
+        {typeof manhwa.chapters === 'number' && manhwa.chapters > 0 && (
+          <div className="text-xs text-muted">
+            Ch. {manhwa.chapters} 
           </div>
         )}
         {typeof manhwa.avgRating === 'number' && (

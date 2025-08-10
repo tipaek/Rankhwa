@@ -10,6 +10,8 @@ const genresList = [
   'Romance','Sci-Fi','Thriller','Supernatural',
 ];
 
+
+
 export const SearchBar: React.FC = () => {
   const { params, setParam } = useSearchQueryParams();
   const navigate = useNavigate();
@@ -46,6 +48,16 @@ export const SearchBar: React.FC = () => {
   const years = Array.from({ length: 30 }, (_, i) => currentYear - i);
   const ratingOptions = Array.from({ length: 10 }, (_, i) => 10 - i); // 10..1
 
+  // Mobile Toggle
+  const activeCount =
+  (params.genres ? 1 : 0) +
+  (params.year ? 1 : 0) +
+  (params.min_rating ? 1 : 0) +
+  (params.min_votes ? 1 : 0) +
+  (params.sort && params.sort !== 'rating' ? 1 : 0);
+
+  const [filtersOpen, setFiltersOpen] = useState(false);
+
   return (
     <div className="space-y-4">
       {/* Top row */}
@@ -59,6 +71,7 @@ export const SearchBar: React.FC = () => {
             onChange={(e) => setQueryInput(e.target.value)}
           />
         </div>
+
         <div className="flex space-x-2">
           <Button variant="primary" onClick={() => navigate('/search' + window.location.search)}>
             Search
@@ -66,8 +79,48 @@ export const SearchBar: React.FC = () => {
         </div>
       </div>
 
+      {/* Mobile filters toggle */}
+      <div className="flex md:hidden justify-between items-center">
+        <button
+          type="button"
+          className="text-sm px-3 py-2 rounded-md border border-border bg-card"
+          onClick={() =>
+            setFiltersOpen(o => {
+              const next = !o;
+              if (!next) setGenresOpen(false); // close dropdown when collapsing
+              return next;
+            })
+          }
+          aria-expanded={filtersOpen}
+          aria-controls="filters-panel"
+        >
+          Filters{activeCount ? ` (${activeCount})` : ''}
+        </button>
+        {activeCount > 0 && (
+          <button
+            type="button"
+            className="text-sm underline"
+            onClick={() => {
+              clearGenres();
+              setParam('year', undefined);
+              setParam('min_rating', undefined);
+              setParam('min_votes', undefined);
+              setParam('sort', 'rating');
+            }}
+          >
+            Clear all
+          </button>
+        )}
+      </div>
+
       {/* Filters row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+      <div className={cn(
+          "mt-2 gap-4",
+          // when CLOSED: hidden on mobile, grid on md+ with proper cols
+          !filtersOpen && "hidden md:grid md:grid-cols-3 xl:grid-cols-6",
+          // when OPEN: grid across breakpoints with full col spec
+          filtersOpen && "grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-6"
+        )}>
         {/* Genres dropdown */}
         <div ref={genresRef} className="relative">
           <label className="block text-sm font-medium mb-1">Genres</label>
