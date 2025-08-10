@@ -76,6 +76,7 @@ public class ManhwaController {
         return new ManhwaSummary(
                 m.getId(), m.getTitle(), m.getAuthor(),
                 m.getAvgRating(), m.getVoteCount(), m.getCoverUrl(),
+                m.getBannerUrl(), m.getChapters(),
                 parseGenres(m.getGenres()),
                 english, romaji, nativeT
         );
@@ -90,6 +91,7 @@ public class ManhwaController {
         return new ManhwaDetail(
                 m.getId(), m.getTitle(), m.getAuthor(), m.getDescription(),
                 m.getReleaseDate(), m.getAvgRating(), m.getVoteCount(), m.getCoverUrl(),
+                m.getBannerUrl(), m.getChapters(),
                 parseGenres(m.getGenres()),
                 english, romaji, nativeT
         );

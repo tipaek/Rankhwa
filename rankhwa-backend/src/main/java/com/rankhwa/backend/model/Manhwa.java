@@ -31,6 +31,9 @@ public class Manhwa {
 
     private String coverUrl;
 
+    @Column(name = "banner_url")
+    private String bannerUrl;
+
     private LocalDate releaseDate;
 
     private Double avgRating = 0.0;
@@ -38,6 +41,8 @@ public class Manhwa {
 
     @Column(columnDefinition = "jsonb")
     private String genres;
+
+    private Integer chapters;
 
     // --- for anilist seeding ---
     @Column(name = "anilist_id", unique = true)
