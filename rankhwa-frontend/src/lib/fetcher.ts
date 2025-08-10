@@ -19,7 +19,10 @@ export async function fetcher<T>(path: string, options: FetchOptions = {}): Prom
   const base = import.meta.env.VITE_API_BASE;
   const { json, auth, headers: hdrsIn, ...rest } = options;
 
-  const headers: HeadersInit = { 'Content-Type': 'application/json', ...(hdrsIn || {}) };
+  // ✱ Only set Content-Type when actually sending JSON
+  const headers: HeadersInit = { ...(hdrsIn || {}) };
+  if (json !== undefined) headers['Content-Type'] = 'application/json';
+
   if (auth) {
     const token = localStorage.getItem('token');
     if (token) headers['Authorization'] = `Bearer ${token}`;
