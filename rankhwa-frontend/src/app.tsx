@@ -3,11 +3,13 @@ import { Outlet, Link, NavLink } from 'react-router-dom';
 import { useAuth } from '@/features/auth/auth.store';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { Button } from '@/components/Button';
+import { GlobalLoading } from './components/GlobalLoading';
 
 const App: React.FC = () => {
   const { user, logout } = useAuth();
   return (
     <div className="min-h-screen flex flex-col">
+      <GlobalLoading />
       <header className="border-b border-border bg-card">
         <div className="max-w-7xl mx-auto flex items-center justify-between p-4">
           <div className="flex items-center space-x-5">
