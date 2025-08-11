@@ -47,7 +47,13 @@ const AuthPage: React.FC = () => {
       const redirectTo = searchParams.get('redirectTo') || '/';
       navigate(decodeURIComponent(redirectTo), { replace: true });
     } catch (err: any) {
-      setError(err.message || 'Failed');
+      const msg = err?.message || (mode === 'login' ? 'Unable to authenticate' : 'Unable to register');
+      setError(msg);
+      toast({
+        title: mode === 'login' ? 'Login failed' : 'Sign up failed',
+        description: msg,
+        variant: 'error'
+      });
     } finally {
       setLoading(false);
     }
