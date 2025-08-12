@@ -47,11 +47,17 @@ export function useSearchQueryParams(basePath?: string) {
         value === '' ||
         (typeof value === 'number' && Number.isNaN(value));
 
-      if (isEmpty) newParams.delete(key as string);
-      else newParams.set(key as string, String(value));
-
-      // Reset page when any filter changes (except when directly changing page)
-      if (key !== 'page') newParams.set('page', '0');
+        const nextVal = isEmpty ? null : String(value);
+        const prevVal = searchParams.get(key as string);
+  
+        // If nothing actually changes, bail early (prevents pointless resets)
+        if ((nextVal ?? '') === (prevVal ?? '')) return;
+  
+        if (isEmpty) newParams.delete(key as string);
+        else newParams.set(key as string, nextVal);
+  
+        // Only reset page if we actually changed *something* other than page
+        if (key !== 'page') newParams.set('page', '0');
 
       const pathname = basePath ?? location.pathname; // stay on current route by default
       navigate({ pathname, search: newParams.toString() }, { replace: true });

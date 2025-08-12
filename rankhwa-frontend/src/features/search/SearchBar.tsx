@@ -6,8 +6,8 @@ import { Button } from '@/components/Button';
 import { cn } from '@/lib/cn';
 
 const genresList = [
-  'Action','Adventure','Comedy','Drama','Fantasy',
-  'Romance','Sci-Fi','Thriller','Supernatural',
+  'Action','Adventure','Comedy','Drama','Fantasy','Mystery','Psychological',
+  'Romance','Sci-Fi','Slice of Life','Supernatural','Thriller'
 ];
 
 
